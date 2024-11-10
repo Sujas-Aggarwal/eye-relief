@@ -1,10 +1,23 @@
 document.addEventListener("DOMContentLoaded", function () {
     const brightnessSlider = document.getElementById("brightness");
+    let brightnessValue = localStorage.getItem("brightness") || 0;
+    function getBrightnessFromContent() {
+        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+            const tabId = tabs[0].id;
 
+            chrome.tabs.sendMessage(tabId, { action: "getBrightness" }, function (response) {
+                if (chrome.runtime.lastError) {
+                    // Handle error (e.g., content script not loaded)
+                    console.error("Error getting brightness:", chrome.runtime.lastError);
+                } else {
+                    brightnessSlider.value = response.brightness || 0; // Update slider
+                }
+            });
+        });
+    }
+    getBrightnessFromContent();
     brightnessSlider.addEventListener("input", function () {
-        const brightnessValue = parseInt(brightnessSlider.value, 10);
-
-        // Get the current tab and try to send a message to the content script
+        brightnessValue = parseInt(brightnessSlider.value, 10);
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
             const tabId = tabs[0].id;
 
